@@ -1,0 +1,16 @@
+{
+  "device_index": 2,
+  "energy_threshold": 0.08,
+  "double_clap_url": "https://www.youtube.com",
+  "music_path": "ironman.mp3",
+  "apps": [
+    "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+    "C:\\Users\\I\u00f1a\\AppData\\Local\\Discord\\Update.exe"
+  ],
+  "triple_clap_action": "Lock PC",
+  "second_double_clap_action": "Stop music + close detector",
+  "calibration_seconds": 3,
+  "cooldown": 1.5,
+  "min_interval": 0.15,
+  "max_interval": 1.0
+}

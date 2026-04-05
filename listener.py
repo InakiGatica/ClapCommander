@@ -2,7 +2,7 @@ import sounddevice as sd
 import numpy as np
 import time as time_module
 import config
-from detector import ClapDetector
+from gesture_engine import GestureEngine
 
 
 def calibrate():
@@ -27,16 +27,19 @@ def calibrate():
 class AudioListener:
     """Listens for audio input and detects claps."""
 
-    def __init__(self, on_double_clap, verbose=False, threshold=None):
+    def __init__(self, on_double_clap=None, on_triple_clap=None, verbose=False, threshold=None):
         """
         Args:
-            on_double_clap: Callback function to call when double clap is detected.
+            on_double_clap: Callback for double clap.
+            on_triple_clap: Callback for triple clap.
             verbose: If True, print detected energy values.
             threshold: Custom energy threshold. If None, uses config.ENERGY_THRESHOLD.
         """
-        self.on_double_clap = on_double_clap
         self.verbose = verbose
-        self.detector = ClapDetector()
+        self.detector = GestureEngine(
+            on_double_clap=on_double_clap,
+            on_triple_clap=on_triple_clap
+        )
         self.stream = None
         self.threshold = threshold if threshold is not None else config.ENERGY_THRESHOLD
 
@@ -54,10 +57,7 @@ class AudioListener:
         # Check if energy exceeds threshold
         if energy > self.threshold:
             current_time = time_module.monotonic()
-            if self.detector.detect(current_time):
-                if self.verbose:
-                    print("Double clap detected!")
-                self.on_double_clap()
+            self.detector.detect(current_time)
 
     def start(self):
         """Start listening for audio input."""

@@ -1,83 +1,67 @@
-# Iron Man Mode - Clap Detector
+# ClapCommander
 
-A Windows desktop application that detects double claps to trigger an "Iron Man" sequence — opening Brave browser with YouTube, Discord, and playing the Iron Man theme song.
+Control your PC with claps. No keyboard, no mouse.
+
+## Preview
+
+![ClapCommander Settings](screenshot.png)
 
 ## Features
 
-- **Double clap detection** using audio energy analysis
-- **First double clap**: Opens Brave with YouTube, launches Discord, plays ironman.mp3
-- **Second double clap**: Stops music and closes the detector
-- **System tray integration** with Quit option
-- **Auto-calibration** — measures ambient noise and sets threshold automatically
-- **Compiled executable** — runs as a single .exe file
-
-## Requirements
-
-- Python 3.12+
-- sounddevice
-- numpy
-- pygame
-- pystray
-- Pillow
-
-Or use the pre-compiled `dist/main.exe` — no Python needed!
+- **👏 Double clap** → Opens configured apps + plays music
+- **👏👏👏 Triple clap** → Lock PC or mute/unmute (configurable)
+- **Second double clap** → Stops music and optionally closes detector
+- **🎵 Configurable music** — Pick any .mp3 or .wav file
+- **⚙️ GUI settings** — Accessible from system tray
+- **🚀 Auto-start** — Runs on Windows boot
+- **📊 Auto-calibration** — Measures ambient noise and sets threshold
 
 ## Installation
 
-### From Source
-
-```bash
-pip install sounddevice numpy pygame pystray pillow
-```
-
-### Pre-compiled
-
-Just run `dist/main.exe` — no installation needed!
+1. Download `ClapCommander.exe` from the [releases](https://github.com/InakiGatica/Ironmanmode/releases)
+2. Run it — configure on first launch
+3. The app lives in your system tray
 
 ## Usage
 
 1. Run the application
 2. Stay quiet for 3 seconds during auto-calibration
-3. **Double clap** to trigger the Iron Man sequence:
-   - Opens Brave browser → youtube.com
-   - Launches Discord
-   - Plays ironman.mp3
-4. **Double clap again** to stop music and close the detector
-5. Alternatively, use the system tray icon → Quit
+3. **Double clap** to open apps and play music
+4. **Triple clap** to lock PC or mute (based on settings)
+5. Use the system tray icon for settings or to quit
 
-## Autostart (optional)
+## Requirements
+
+- Windows 10/11
+- Microphone
+
+## Autostart
 
 To run on Windows startup:
 
-1. Create a shortcut to `main.exe`
-2. Press `Win + R`, type `shell:startup`
-3. Place the shortcut in the startup folder
-
-Or use Task Scheduler to run the .exe on login.
+1. Open Task Scheduler (`taskschd.msc`)
+2. Create Basic Task → Name: "ClapDetector"
+3. Trigger: At log on
+4. Action: Start a program → Browse to `ClapCommander.exe`
 
 ## Project Structure
 
 ```
-IronManClaps/
-├── config.py          # Constants (sample rate, thresholds, device)
-├── detector.py        # ClapDetector class (double clap logic)
-├── listener.py       # AudioListener with sounddevice
-├── actions.py        # open_brave, open_discord, play_music, iron_man_sequence
-├── tray.py           # System tray icon with pystray
-├── main.py           # Entry point, ties everything together
-├── ironman.mp3       # Theme song (your own file!)
+ClapCommander/
+├── main.py              # Entry point
+├── gui.py               # CustomTkinter settings window
+├── gui_launcher.py      # Standalone launcher for tray
+├── actions.py          # App launching, music, lock, mute
+├── gesture_engine.py   # Double/triple clap detection
+├── listener.py         # Audio input with sounddevice
+├── tray.py             # System tray icon
+├── settings.py         # Settings management
+├── settings.json       # User configuration
+├── icon.ico            # App icon
+├── ironman.mp3         # Default music file
 └── dist/
-    └── main.exe      # Compiled executable
+    └── ClapCommander.exe  # Compiled executable
 ```
-
-## Calibration
-
-The app auto-calibrates on startup by measuring 3 seconds of ambient noise and setting the energy threshold to 15x the RMS. If it's too sensitive or not sensitive enough, adjust `ENERGY_THRESHOLD` in `config.py`.
-
-## Known Issues
-
-- If using a different microphone, update `DEVICE_INDEX` in `config.py`
-- Discord path may vary — update `DISCORD_PATH` in `actions.py` if needed
 
 ## License
 
