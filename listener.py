@@ -18,7 +18,7 @@ def calibrate():
     sd.wait()  # block until recording finishes
 
     rms = np.sqrt(np.mean(recording ** 2))
-    threshold = rms * 15  # safe margin
+    threshold = rms * 8  # safe margin
 
     print(f"Calibration done. Threshold set to: {threshold:.4f}")
     return threshold
@@ -42,6 +42,7 @@ class AudioListener:
         )
         self.stream = None
         self.threshold = threshold if threshold is not None else config.ENERGY_THRESHOLD
+        self.prev_energy = 0.0
 
     def _callback(self, indata, frames, time, status):
         """Process incoming audio data."""
@@ -54,8 +55,13 @@ class AudioListener:
         if self.verbose:
             print(f"Energy: {energy:.4f}")
 
-        # Check if energy exceeds threshold
-        if energy > self.threshold:
+        # Detect sudden spike: current energy must be X times the previous energy
+        spike_ratio = energy / (self.prev_energy + 0.001)  # avoid division by zero
+        is_clap = energy > self.threshold and spike_ratio > 2.0
+
+        self.prev_energy = energy
+
+        if is_clap:
             current_time = time_module.monotonic()
             self.detector.detect(current_time)
 

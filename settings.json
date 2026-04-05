@@ -10,7 +10,7 @@
   "triple_clap_action": "Lock PC",
   "second_double_clap_action": "Stop music + close detector",
   "calibration_seconds": 3,
-  "cooldown": 1.5,
+  "cooldown": 3.0,
   "min_interval": 0.15,
   "max_interval": 1.0
 }

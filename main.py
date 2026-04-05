@@ -50,7 +50,8 @@ def main():
     listener = AudioListener(
         on_double_clap=trigger_and_exit,
         on_triple_clap=triple_action,
-        threshold=threshold
+        threshold=threshold,
+        verbose=True
     )
 
     def on_quit():
