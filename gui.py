@@ -2,10 +2,46 @@ import sounddevice as sd
 import settings
 import os
 import customtkinter as ctk
+import subprocess
+import winreg
 
 # Set dark mode globally
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
+
+
+def is_autostart_enabled() -> bool:
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+            r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_READ)
+        winreg.QueryValueEx(key, "ClapCommander")
+        winreg.CloseKey(key)
+        return True
+    except FileNotFoundError:
+        return False
+
+
+def set_autostart(enabled: bool):
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+        r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE)
+    if enabled:
+        import sys
+        if getattr(sys, 'frozen', False):
+            # Running as compiled .exe
+            exe_path = sys.executable
+        else:
+            # Running as .py - point to the dist exe
+            exe_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "dist", "ClapCommander.exe"
+            )
+        winreg.SetValueEx(key, "ClapCommander", 0, winreg.REG_SZ, f'"{exe_path}"')
+    else:
+        try:
+            winreg.DeleteValue(key, "ClapCommander")
+        except FileNotFoundError:
+            pass
+    winreg.CloseKey(key)
 
 
 class ConfigWindow:
@@ -13,7 +49,7 @@ class ConfigWindow:
         self.on_save = on_save
         self.root = ctk.CTk()
         self.root.title("ClapCommander")
-        self.root.geometry("480x700")
+        self.root.geometry("520x800")
 
         # Container with padding - scrollable
         container = ctk.CTkScrollableFrame(self.root, fg_color="transparent")
@@ -92,27 +128,17 @@ class ConfigWindow:
         self.url_entry.insert(0, settings.get("double_clap_url", "https://www.youtube.com"))
         self.url_entry.pack(pady=5)
 
-        # Music file
-        lbl_music = ctk.CTkLabel(container, text="Music File")
-        lbl_music.pack(anchor="w", pady=(10, 0))
-        music_frame = ctk.CTkFrame(container, fg_color="transparent")
-        music_frame.pack(fill="x", pady=5)
-        self.music_entry = ctk.CTkEntry(music_frame, width=350)
-        self.music_entry.insert(0, settings.get("music_path", "ironman.mp3"))
-        self.music_entry.pack(side="left")
-        btn_browse = ctk.CTkButton(
-            music_frame,
-            text="Browse",
-            width=80,
-            fg_color="#e74c3b",
-            hover_color="#c0392b",
-            command=self._browse_music
-        )
-        btn_browse.pack(side="left", padx=5)
-
         # Dynamic apps list
         lbl_apps = ctk.CTkLabel(container, text="Apps to Open")
         lbl_apps.pack(anchor="w", pady=(10, 0))
+
+        lbl_apps_hint = ctk.CTkLabel(
+            container, 
+            text="Tip: También podés escribir comandos como 'wt' o 'code'",
+            text_color="gray60",
+            font=("SF Pro Display", 10)
+        )
+        lbl_apps_hint.pack(anchor="w", pady=(0, 5))
 
         self.app_entries = []
         self.apps_frame = ctk.CTkFrame(container, fg_color="transparent")
@@ -152,6 +178,20 @@ class ConfigWindow:
         self.second_double_combo.set(settings.get("second_double_clap_action", "Stop music + close detector"))
         self.second_double_combo.pack(pady=5)
 
+        # Autostart
+        lbl_startup = ctk.CTkLabel(container, text="Sistema")
+        lbl_startup.pack(anchor="w", pady=(10, 0))
+
+        self.autostart_var = ctk.BooleanVar(value=is_autostart_enabled())
+        self.autostart_check = ctk.CTkCheckBox(
+            container,
+            text="Iniciar con Windows",
+            variable=self.autostart_var,
+            fg_color="#e74c3c",
+            hover_color="#c0392b"
+        )
+        self.autostart_check.pack(anchor="w", pady=5)
+
         # Save button
         btn_save = ctk.CTkButton(
             container,
@@ -167,32 +207,44 @@ class ConfigWindow:
     def _add_app_row(self, path=""):
         row = ctk.CTkFrame(self.apps_frame, fg_color="transparent")
         row.pack(fill="x", pady=2)
-        entry = ctk.CTkEntry(row, width=380)
+        
+        entry = ctk.CTkEntry(row, width=300)
         entry.insert(0, path)
         entry.pack(side="left")
+        
+        btn_browse = ctk.CTkButton(
+            row,
+            text="📂",
+            width=35,
+            fg_color="#2a2a2a",
+            hover_color="#3a3a3a",
+            command=lambda e=entry: self._browse_app(e)
+        )
+        btn_browse.pack(side="left", padx=2)
+        
         btn_remove = ctk.CTkButton(
             row,
             text="✕",
-            width=40,
+            width=35,
             fg_color="#c0392b",
             hover_color="#e74c3c",
             command=lambda r=row, e=entry: self._remove_app_row(r, e)
         )
-        btn_remove.pack(side="left", padx=5)
+        btn_remove.pack(side="left", padx=2)
         self.app_entries.append(entry)
+
+    def _browse_app(self, entry):
+        from tkinter import filedialog
+        path = filedialog.askopenfilename(
+            filetypes=[("Executables", "*.exe"), ("All files", "*.*")]
+        )
+        if path:
+            entry.delete(0, "end")
+            entry.insert(0, path)
 
     def _remove_app_row(self, row, entry):
         self.app_entries.remove(entry)
         row.destroy()
-
-    def _browse_music(self):
-        from tkinter import filedialog
-        path = filedialog.askopenfilename(
-            filetypes=[("Audio files", "*.mp3 *.wav"), ("All files", "*.*")]
-        )
-        if path:
-            self.music_entry.delete(0, "end")
-            self.music_entry.insert(0, path)
 
     def _save(self):
         device_str = self.mic_combo.get()
@@ -202,7 +254,6 @@ class ConfigWindow:
             "device_index": device_index,
             "energy_threshold": round(self.thresh_slider.get(), 2),
             "double_clap_url": self.url_entry.get(),
-            "music_path": self.music_entry.get(),
             "apps": [e.get() for e in self.app_entries if e.get().strip()],
             "triple_clap_action": self.triple_combo.get(),
             "second_double_clap_action": self.second_double_combo.get(),
@@ -214,6 +265,9 @@ class ConfigWindow:
 
         settings.save_settings(data)
         print("Settings saved.")
+
+        # Update autostart setting
+        set_autostart(self.autostart_var.get())
 
         if self.on_save:
             self.on_save()

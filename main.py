@@ -54,6 +54,8 @@ def main():
         verbose=True
     )
 
+    actions.set_listener(listener)
+
     def on_quit():
         actions.stop_music()
         listener.stop()

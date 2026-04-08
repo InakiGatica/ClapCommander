@@ -1,32 +1,42 @@
+#define MyAppName "ClapCommander"
+#define MyAppVersion "1.2.0"
+#define MyAppPublisher "Iñaki Dev"
+#define MyAppExeName "ClapCommander.exe"
+
 [Setup]
-AppName=ClapCommander
-AppVersion=1.0.0
-AppPublisher=InakiGatica
-DefaultDirName={autopf}\ClapCommander
-DefaultGroupName=ClapCommander
+AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
 OutputDir=installer
 OutputBaseFilename=ClapCommander_Setup
 SetupIconFile=icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+PrivilegesRequired=admin
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "Create desktop shortcut"; GroupDescription: "Additional icons:"
-Name: "startup"; Description: "Start with Windows"; GroupDescription: "Startup:"
+Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; GroupDescription: "Accesos directos:"; Flags: unchecked
+Name: "startupicon"; Description: "Iniciar con Windows"; GroupDescription: "Opciones:"; Flags: unchecked
 
 [Files]
-Source: "dist\ClapCommander.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\music\*"; DestDir: "{app}\music"; Flags: ignoreversion recursesubdirs
+Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "icon.png"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\ClapCommander"; Filename: "{app}\ClapCommander.exe"
-Name: "{commondesktop}\ClapCommander"; Filename: "{app}\ClapCommander.exe"; Tasks: desktopicon
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "ClapCommander"; ValueData: "{app}\ClapCommander.exe"; Flags: uninsdeletevalue; Tasks: startup
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: startupicon
 
 [Run]
-Filename: "{app}\ClapCommander.exe"; Description: "Launch ClapCommander"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName}"; Flags: nowait postinstall skipifsilent
